@@ -1,0 +1,19 @@
+location ~ ^/channel/britishairways/(.*) {
+    proxy_pass $WP_CHANNELS_BA_PROXY_PASS/$1;
+    proxy_set_header Host $WP_CHANNELS_BA_HOST;
+    proxy_ssl_server_name on;
+    proxy_connect_timeout 30;
+    proxy_send_timeout 120;
+    proxy_read_timeout 120;
+    send_timeout 120;
+
+    # Drop HTTP headers that are not needed (Wenrix headers)
+    proxy_set_header x-wenrix-operation "";
+    proxy_set_header x-wenrix-trace-id "";
+    proxy_set_header authorization "";
+    proxy_set_header x-real-ip "";
+    proxy_set_header x-forwarded-for "";
+
+    # Add the Authorization header
+    proxy_set_header Client-Key "$WP_CHANNELS_BA_API_KEY";
+}

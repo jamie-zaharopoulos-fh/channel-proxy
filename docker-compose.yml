@@ -16,6 +16,8 @@ services:
       - WP_CHANNELS_TRAVELFUSION_LOGIN_ID=test-login
       - WP_CHANNELS_TRAVELFUSION_XML_LOGIN_ID=test-login
       - 'WP_CHANNELS_TRAVELFUSION_SUPPLIER_PARAMETERS={"test-iata": {"test-supplier": {"test-login-key": "test-login-value"}}}'
+      # Farelogix legacy config for backwards compatibility
+      # Comment out the following lines if you want to use the new config
       - WP_CHANNELS_FARELOGIX_AA_HOST=mockserver
       - WP_CHANNELS_FARELOGIX_AA_PROXY_PASS=http://mockserver:80
       - WP_CHANNELS_FARELOGIX_AA_API_KEY=test-aa-key
@@ -24,6 +26,18 @@ services:
       - WP_CHANNELS_FARELOGIX_AA_PASSWORD=test-pass
       - WP_CHANNELS_FARELOGIX_AA_AGENT_USER=test-agent-user
       - WP_CHANNELS_FARELOGIX_AA_AGENT_PASSWORD=test-agent-pass
+      # Farelogix new config with multiple account IDs
+      # Comment out the following lines if you want to use the old config
+      # Also, make sure to set the WP_CHANNELS_FARELOGIX_USE_ACCOUNT_IDS environment variable on the test container
+      # - WP_CHANNELS_FARELOGIX_USE_ACCOUNT_IDS=true
+      # - WP_CHANNELS_FARELOGIX_AA_CAD_HOST=mockserver
+      # - WP_CHANNELS_FARELOGIX_AA_CAD_PROXY_PASS=http://mockserver:80
+      # - WP_CHANNELS_FARELOGIX_AA_CAD_API_KEY=test-aa-key
+      # - WP_CHANNELS_FARELOGIX_AA_CAD_AGENT=test-agent
+      # - WP_CHANNELS_FARELOGIX_AA_CAD_USERNAME=test-user
+      # - WP_CHANNELS_FARELOGIX_AA_CAD_PASSWORD=test-pass
+      # - WP_CHANNELS_FARELOGIX_AA_CAD_AGENT_USER=test-agent-user
+      # - WP_CHANNELS_FARELOGIX_AA_CAD_AGENT_PASSWORD=test-agent-pass
     depends_on:
       mockserver:
         condition: service_healthy
@@ -62,6 +76,9 @@ services:
     environment:
       - PROXY_HOST=proxy
       - PROXY_PORT=8080
+      # Make sure this matches the WP_CHANNELS_FARELOGIX_USE_ACCOUNT_IDS environment variable on the proxy container
+      # Uncomment this line if you want to use the new config
+      # - WP_CHANNELS_FARELOGIX_USE_ACCOUNT_IDS=true
     depends_on:
       proxy:
         condition: service_healthy

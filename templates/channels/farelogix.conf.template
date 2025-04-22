@@ -1,0 +1,40 @@
+location ~ ^/channel/farelogix-${LOCATION_PATH}/(.*) {
+    proxy_pass ${PROXY_PASS}/$1;
+    proxy_set_header Host ${HOST};
+    proxy_ssl_server_name on;
+    proxy_connect_timeout 30;
+    proxy_send_timeout 120;
+    proxy_read_timeout 120;
+    send_timeout 120;
+
+    # Drop HTTP headers that are not needed (Wenrix headers)
+    proxy_set_header x-wenrix-operation "";
+    proxy_set_header x-wenrix-trace-id "";
+    proxy_set_header authorization "";
+    proxy_set_header x-real-ip "";
+    proxy_set_header x-forwarded-for "";
+
+    # Add API key header
+    proxy_set_header Ocp-Apim-Subscription-Key "${API_KEY}";
+
+    lua_need_request_body on;
+
+    access_by_lua_block {
+        local agent = "${AGENT}"
+        local username = "${USERNAME}"
+        local password = "${PASSWORD}"
+        local agent_user = "${AGENT_USER}"
+        local agent_password = "${AGENT_PASSWORD}"
+
+        ngx.req.read_body()
+        local body = ngx.req.get_body_data()
+        if body then
+            body = ngx.re.gsub(body, "#FLX_USERNAME#", username)
+            body = ngx.re.gsub(body, "#FLX_PASSWORD#", password)
+            body = ngx.re.gsub(body, "#FLX_AGENT#", agent)
+            body = ngx.re.gsub(body, "#FLX_AGENT_USER#", agent_user)
+            body = ngx.re.gsub(body, "#FLX_AGENT_PASSWORD#", agent_password)
+        end
+        ngx.req.set_body_data(body)
+    }
+}

@@ -1,5 +1,7 @@
 """Tests for the proxy functionality."""
 
+import os
+
 import requests
 import xmltodict
 from test_utils import print_debug_info, print_request_debug, verify_headers
@@ -56,7 +58,11 @@ def test_farelogix_aa_request(proxy_url):
 
     request_headers = {"test-header": "should-remain"}
 
-    response = requests.post(f"{proxy_url}/channel/farelogix-aa/anything", json=test_body, headers=request_headers)
+    base_path = "/channel/farelogix-aa"
+    if os.getenv("WP_CHANNELS_FARELOGIX_USE_ACCOUNT_IDS", "").lower() == "true":
+        base_path = f"{base_path}/cad"
+
+    response = requests.post(f"{proxy_url}{base_path}/anything", json=test_body, headers=request_headers)
     if response.status_code != 200:
         print_request_debug(response, test_body, request_headers)
     assert response.status_code == 200

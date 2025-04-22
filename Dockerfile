@@ -5,12 +5,16 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
-COPY nginx.conf /etc/nginx/nginx.conf.template
+RUN mkdir -p /etc/nginx/includes /etc/nginx/templates
+
+COPY templates /etc/nginx/templates
+COPY scripts /usr/local/bin/scripts
+COPY travelfusion.lua /
+
+RUN chmod -R +x /usr/local/bin/scripts
 
 WORKDIR /
-COPY start.sh /
-COPY travelfusion.lua /
 
 STOPSIGNAL SIGTERM
 
-CMD ["bash", "-x", "/start.sh"]
+CMD ["/usr/local/bin/scripts/setup_nginx.sh", "start"]

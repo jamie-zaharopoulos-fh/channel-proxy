@@ -1,0 +1,47 @@
+location ~ ^/channel/travelfusion(?:/(.*))?$ {
+    # If $1 is empty, this effectively proxies to $WP_CHANNELS_TRAVELFUSION_PROXY_PASS/
+    proxy_pass $WP_CHANNELS_TRAVELFUSION_PROXY_PASS/$1;
+
+    proxy_set_header Host $WP_CHANNELS_TRAVELFUSION_HOST;
+    proxy_set_header Content-Type text/xml;
+    proxy_ssl_server_name on;
+    proxy_connect_timeout 30;
+    proxy_send_timeout 120;
+    proxy_read_timeout 120;
+    send_timeout 120;
+
+    # Drop HTTP headers that are not needed (Wenrix headers)
+    proxy_set_header x-wenrix-operation "";
+    proxy_set_header x-wenrix-trace-id "";
+    proxy_set_header x-wenrix-iata-number "";
+    proxy_set_header x-wenrix-supplier "";
+    proxy_set_header authorization "";
+    proxy_set_header x-real-ip "";
+    proxy_set_header x-forwarded-for "";
+
+    lua_need_request_body on;
+
+    access_by_lua_block {
+        require "travelfusion"
+
+        local login_id = "$WP_CHANNELS_TRAVELFUSION_LOGIN_ID"
+        local xml_login_id = "$WP_CHANNELS_TRAVELFUSION_XML_LOGIN_ID"
+        ngx.req.read_body()
+        local body = ngx.req.get_body_data()
+
+        local config = load_config()
+        local iata_number = ngx.req.get_headers()["x-wenrix-iata-number"]
+        local supplier = ngx.req.get_headers()["x-wenrix-supplier"]
+        local supplier_list = ""
+        if iata_number and supplier and config[iata_number] and config[iata_number][supplier] then
+            supplier_list = build_supplier_labels(supplier, config[iata_number][supplier])
+        end
+
+        if body then
+            body = ngx.re.gsub(body, "<LoginId>PLACEHOLDER</LoginId>", "<LoginId>" .. login_id .. "</LoginId>")
+            body = ngx.re.gsub(body, "<XmlLoginId>PLACEHOLDER</XmlLoginId>", "<XmlLoginId>" .. xml_login_id .. "</XmlLoginId>")
+            body = ngx.re.gsub(body, "<CustomSupplierParameterList>PLACEHOLDER</CustomSupplierParameterList>", "<CustomSupplierParameterList>" .. supplier_list .. "</CustomSupplierParameterList>")
+        end
+        ngx.req.set_body_data(body)
+    }
+}
