@@ -68,7 +68,7 @@ setup_additional_includes() {
             if [ -f "$include_file" ]; then
                 filename=$(basename "$include_file")
                 target_path="/etc/nginx/includes/${filename}"
-                
+
                 if [ ! -f "$target_path" ]; then
                     debug_log "Creating symlink for $include_file to $target_path"
                     ln -s "$include_file" "$target_path"
